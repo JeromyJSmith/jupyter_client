@@ -448,7 +448,7 @@ class Session(Configurable):
         try:
             self.digest_mod = getattr(hashlib, hash_name)
         except AttributeError as e:
-            raise TraitError("hashlib has no such attribute: %s" % hash_name) from e
+            raise TraitError(f"hashlib has no such attribute: {hash_name}") from e
         self._new_auth()
 
     digest_mod = Any()
@@ -492,7 +492,7 @@ class Session(Configurable):
     def _pack_changed(self, change):
         new = change["new"]
         if not callable(new):
-            raise TypeError("packer must be callable, not %s" % type(new))
+            raise TypeError(f"packer must be callable, not {type(new)}")
 
     unpack = Any(default_unpacker)  # the actual packer function
 
@@ -501,7 +501,7 @@ class Session(Configurable):
         # unpacker is not checked - it is assumed to be
         new = change["new"]
         if not callable(new):
-            raise TypeError("unpacker must be callable, not %s" % type(new))
+            raise TypeError(f"unpacker must be callable, not {type(new)}")
 
     # thresholds:
     copy_threshold = Integer(
@@ -658,12 +658,13 @@ class Session(Configurable):
         serialize/deserialize methods converts this nested message dict to the wire
         format, which is a list of message parts.
         """
-        msg = {}
         header = self.msg_header(msg_type) if header is None else header
-        msg["header"] = header
-        msg["msg_id"] = header["msg_id"]
-        msg["msg_type"] = header["msg_type"]
-        msg["parent_header"] = {} if parent is None else extract_header(parent)
+        msg = {
+            "header": header,
+            "msg_id": header["msg_id"],
+            "msg_type": header["msg_type"],
+            "parent_header": {} if parent is None else extract_header(parent),
+        }
         msg["content"] = {} if content is None else content
         msg["metadata"] = self.metadata.copy()
         if metadata is not None:
@@ -724,7 +725,7 @@ class Session(Configurable):
             # should be bytes, but JSON often spits out unicode
             content = content.encode("utf8")
         else:
-            raise TypeError("Content incorrect type: %s" % type(content))
+            raise TypeError(f"Content incorrect type: {type(content)}")
 
         real_message = [
             self.pack(msg["header"]),
@@ -849,7 +850,7 @@ class Session(Configurable):
             msg = adapt(msg, self.adapt_version)
         to_send = self.serialize(msg, ident)
         to_send.extend(buffers)
-        longest = max([len(s) for s in to_send])
+        longest = max(len(s) for s in to_send)
         copy = longest < self.copy_threshold
 
         if stream and buffers and track and not copy:
@@ -898,9 +899,7 @@ class Session(Configurable):
         if ident is not None:
             to_send.extend(ident)
 
-        to_send.append(DELIM)
-        # Don't include buffers in signature (per spec).
-        to_send.append(self.sign(msg_list[0:4]))
+        to_send.extend((DELIM, self.sign(msg_list[:4])))
         to_send.extend(msg_list)
         if isinstance(stream, zmq.asyncio.Socket):
             stream = zmq.Socket.shadow(stream.underlying)
@@ -1046,7 +1045,6 @@ class Session(Configurable):
             content, buffers].  The buffers are returned as memoryviews.
         """
         minlen = 5
-        message = {}
         if not copy:
             # pyzmq didn't copy the first parts of the message, so we'll do it
             msg_list = t.cast(t.List[zmq.Message], msg_list)
@@ -1068,19 +1066,16 @@ class Session(Configurable):
             if not compare_digest(signature, check):
                 msg = "Invalid Signature: %r" % signature
                 raise ValueError(msg)
-        if not len(msg_list) >= minlen:
+        if len(msg_list) < minlen:
             msg = "malformed message, must have at least %i elements" % minlen
             raise TypeError(msg)
         header = self.unpack(msg_list[1])
-        message["header"] = extract_dates(header)
+        message = {"header": extract_dates(header)}
         message["msg_id"] = header["msg_id"]
         message["msg_type"] = header["msg_type"]
         message["parent_header"] = extract_dates(self.unpack(msg_list[2]))
         message["metadata"] = self.unpack(msg_list[3])
-        if content:
-            message["content"] = self.unpack(msg_list[4])
-        else:
-            message["content"] = msg_list[4]
+        message["content"] = self.unpack(msg_list[4]) if content else msg_list[4]
         buffers = [memoryview(b) for b in msg_list[5:]]
         if buffers and buffers[0].shape is None:
             # force copy to workaround pyzmq #646

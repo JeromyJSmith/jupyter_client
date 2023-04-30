@@ -158,10 +158,7 @@ class KernelProvisionerFactory(SingletonConfigurable):
         The key is the provisioner name for its entry point.  The value is the colon-separated
         string of the entry point's module name and object name.
         """
-        entries = {}
-        for name, ep in self.provisioners.items():
-            entries[name] = ep.value
-        return entries
+        return {name: ep.value for name, ep in self.provisioners.items()}
 
     @staticmethod
     def _get_all_provisioners() -> List[EntryPoint]:
@@ -170,8 +167,9 @@ class KernelProvisionerFactory(SingletonConfigurable):
 
     def _get_provisioner(self, name: str) -> EntryPoint:
         """Wrapper around entry_points (to fetch a single provisioner) - primarily to facilitate testing."""
-        eps = entry_points(group=KernelProvisionerFactory.GROUP_NAME, name=name)
-        if eps:
+        if eps := entry_points(
+            group=KernelProvisionerFactory.GROUP_NAME, name=name
+        ):
             return eps[0]
 
         # Check if the entrypoint name is 'local-provisioner'.  Although this should never

@@ -8,7 +8,7 @@ from tempfile import mkdtemp
 
 def _launch(extra_env):
     env = os.environ.copy()
-    env.update(extra_env)
+    env |= extra_env
     return Popen(
         [sys.executable, "-c", "from jupyter_client.kernelapp import main; main()"],
         env=env,

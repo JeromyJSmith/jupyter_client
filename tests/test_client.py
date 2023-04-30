@@ -44,8 +44,8 @@ class TestKernelClient(TestCase):
 
     def _check_reply(self, reply_type, reply):
         self.assertIsInstance(reply, dict)
-        self.assertEqual(reply["header"]["msg_type"], reply_type + "_reply")
-        self.assertEqual(reply["parent_header"]["msg_type"], reply_type + "_request")
+        self.assertEqual(reply["header"]["msg_type"], f"{reply_type}_reply")
+        self.assertEqual(reply["parent_header"]["msg_type"], f"{reply_type}_request")
 
     def test_history(self):
         kc = self.kc
@@ -120,8 +120,8 @@ class TestAsyncKernelClient:
 
     def _check_reply(self, reply_type, reply):
         assert isinstance(reply, dict)
-        assert reply["header"]["msg_type"] == reply_type + "_reply"
-        assert reply["parent_header"]["msg_type"] == reply_type + "_request"
+        assert reply["header"]["msg_type"] == f"{reply_type}_reply"
+        assert reply["parent_header"]["msg_type"] == f"{reply_type}_request"
 
     @pytest.mark.skipif(
         sys.platform != 'linux' or platform.python_implementation().lower() == 'pypy',
@@ -231,8 +231,8 @@ class TestThreadedKernelClient(TestKernelClient):
 
     def _check_reply(self, reply_type, reply):
         self.assertIsInstance(reply, dict)
-        self.assertEqual(reply["header"]["msg_type"], reply_type + "_reply")
-        self.assertEqual(reply["parent_header"]["msg_type"], reply_type + "_request")
+        self.assertEqual(reply["header"]["msg_type"], f"{reply_type}_reply")
+        self.assertEqual(reply["parent_header"]["msg_type"], f"{reply_type}_request")
 
     def test_execute_interactive(self):
         pytest.skip('Not supported')

@@ -18,9 +18,11 @@ def wrapped(meth, channel):
         reply = kwargs.pop("reply", False)
         timeout = kwargs.pop("timeout", None)
         msg_id = meth(self, *args, **kwargs)
-        if not reply:
-            return msg_id
-        return self._recv_reply(msg_id, timeout=timeout, channel=channel)
+        return (
+            self._recv_reply(msg_id, timeout=timeout, channel=channel)
+            if reply
+            else msg_id
+        )
 
     return _
 

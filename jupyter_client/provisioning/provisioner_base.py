@@ -180,9 +180,10 @@ class KernelProvisionerBase(  # type:ignore[misc]
 
         NOTE: The superclass method must always be called first to ensure proper serialization.
         """
-        provisioner_info: Dict[str, Any] = {}
-        provisioner_info['kernel_id'] = self.kernel_id
-        provisioner_info['connection_info'] = self.connection_info
+        provisioner_info: Dict[str, Any] = {
+            'kernel_id': self.kernel_id,
+            'connection_info': self.connection_info,
+        }
         return provisioner_info
 
     async def load_provisioner_info(self, provisioner_info: Dict) -> None:
@@ -253,5 +254,5 @@ class KernelProvisionerBase(  # type:ignore[misc]
             # new dict with substitutions.
             templated_env = self.kernel_spec.env
             for k, v in templated_env.items():
-                substituted_env.update({k: Template(v).safe_substitute(substitution_values)})
+                substituted_env[k] = Template(v).safe_substitute(substitution_values)
         return substituted_env

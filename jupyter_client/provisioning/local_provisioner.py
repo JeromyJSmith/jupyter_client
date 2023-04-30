@@ -38,10 +38,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
 
     async def poll(self) -> Optional[int]:
         """Poll the provisioner."""
-        ret = 0
-        if self.process:
-            ret = self.process.poll()
-        return ret
+        return self.process.poll() if self.process else 0
 
     async def wait(self) -> Optional[int]:
         """Wait for the provisioner process."""
@@ -58,8 +55,7 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
             ret = self.process.wait()
             # Make sure all the fds get closed.
             for attr in ['stdout', 'stderr', 'stdin']:
-                fid = getattr(self.process, attr)
-                if fid:
+                if fid := getattr(self.process, attr):
                     fid.close()
             self.process = None  # allow has_process to now return False
         return ret
@@ -161,17 +157,9 @@ class LocalProvisioner(KernelProvisionerBase):  # type:ignore[misc]
         Returns the updated kwargs.
         """
 
-        # This should be considered temporary until a better division of labor can be defined.
-        km = self.parent
-        if km:
+        if km := self.parent:
             if km.transport == 'tcp' and not is_local_ip(km.ip):
-                msg = (
-                    "Can only launch a kernel on a local interface. "
-                    "This one is not: {}."
-                    "Make sure that the '*_address' attributes are "
-                    "configured properly. "
-                    "Currently valid addresses are: {}".format(km.ip, local_ips())
-                )
+                msg = f"Can only launch a kernel on a local interface. This one is not: {km.ip}.Make sure that the '*_address' attributes are configured properly. Currently valid addresses are: {local_ips()}"
                 raise RuntimeError(msg)
             # build the Popen cmd
             extra_arguments = kwargs.pop('extra_arguments', [])

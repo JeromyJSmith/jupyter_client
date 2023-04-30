@@ -39,7 +39,7 @@ def _get_output(cmd):
     p = Popen(cmd, stdout=PIPE, stderr=PIPE, startupinfo=startupinfo)
     stdout, stderr = p.communicate()
     if p.returncode:
-        msg = "Failed to run {}: {}".format(cmd, stderr.decode("utf8", "replace"))
+        msg = f'Failed to run {cmd}: {stderr.decode("utf8", "replace")}'
         raise OSError(msg)
     return stdout.decode("utf8", "replace")
 
@@ -114,8 +114,7 @@ def _load_ips_ifconfig():
     lines = out.splitlines()
     addrs = []
     for line in lines:
-        m = _ifconfig_ipv4_pat.match(line.strip())
-        if m:
+        if m := _ifconfig_ipv4_pat.match(line.strip()):
             addrs.append(m.group(1))
     _populate_from_list(addrs)
 
@@ -143,8 +142,7 @@ def _load_ips_ipconfig():
     lines = out.splitlines()
     addrs = []
     for line in lines:
-        m = _ipconfig_ipv4_pat.match(line.strip())
-        if m:
+        if m := _ipconfig_ipv4_pat.match(line.strip()):
             addrs.append(m.group(1))
     _populate_from_list(addrs)
 
@@ -196,7 +194,7 @@ def _load_ips_gethostbyname():
         PUBLIC_IPS[:] = socket.gethostbyname_ex(hostname)[2]
         # try hostname.local, in case hostname has been short-circuited to loopback
         if not hostname.endswith(".local") and all(ip.startswith("127") for ip in PUBLIC_IPS):
-            PUBLIC_IPS[:] = socket.gethostbyname_ex(socket.gethostname() + ".local")[2]
+            PUBLIC_IPS[:] = socket.gethostbyname_ex(f"{socket.gethostname()}.local")[2]
     except OSError:
         pass
     finally:
@@ -261,7 +259,10 @@ def _load_ips(suppress_exceptions=True):
         if not suppress_exceptions:
             raise
         # unexpected error shouldn't crash, load dumb default values instead.
-        warn("Unexpected error discovering local network interfaces: %s" % e, stacklevel=2)
+        warn(
+            f"Unexpected error discovering local network interfaces: {e}",
+            stacklevel=2,
+        )
     _load_ips_dumb()
 
 

@@ -167,15 +167,15 @@ class KernelSpecTests(unittest.TestCase):
         native_name = kernelspec.NATIVE_KERNEL_NAME
         native_kernel = ksm.get_kernel_spec(native_name)
 
+
+
         class MyKSM(kernelspec.KernelSpecManager):
             def get_kernel_spec(self, name):
                 spec = copy.copy(native_kernel)
                 if name == "fake":
                     spec.name = name
                     spec.resource_dir = resource_dir
-                elif name == native_name:
-                    pass
-                else:
+                elif name != native_name:
                     raise KeyError(name)
                 return spec
 
@@ -184,6 +184,7 @@ class KernelSpecTests(unittest.TestCase):
                     "fake": resource_dir,
                     native_name: native_kernel.resource_dir,
                 }
+
 
         # ensure that get_all_specs doesn't raise if only
         # find_kernel_specs and get_kernel_spec are defined
