@@ -340,10 +340,4 @@ class ThreadedKernelClient(KernelClient):
 
     def is_alive(self) -> bool:
         """Is the kernel process still running?"""
-        if self._hb_channel is not None:
-            # We don't have access to the KernelManager,
-            # so we use the heartbeat.
-            return self._hb_channel.is_beating()
-        # no heartbeat and not local, we can't tell if it's running,
-        # so naively return True
-        return True
+        return self._hb_channel.is_beating() if self._hb_channel is not None else True

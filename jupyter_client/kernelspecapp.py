@@ -200,9 +200,8 @@ class RemoveKernelSpec(JupyterApp):
         """Start the application."""
         self.kernel_spec_manager.ensure_native_kernel = False
         spec_paths = self.kernel_spec_manager.find_kernel_specs()
-        missing = set(self.spec_names).difference(set(spec_paths))
-        if missing:
-            self.exit("Couldn't find kernel spec(s): %s" % ", ".join(missing))
+        if missing := set(self.spec_names).difference(set(spec_paths)):
+            self.exit(f"""Couldn't find kernel spec(s): {", ".join(missing)}""")
 
         if not (self.force or self.answer_yes):
             print("Kernel specs to remove:")
@@ -328,14 +327,15 @@ class KernelSpecApp(Application):
 
     def start(self):
         """Start the application."""
-        if self.subapp is None:
-            print("No subcommand specified. Must specify one of: %s" % list(self.subcommands))
-            print()
-            self.print_description()
-            self.print_subcommands()
-            self.exit(1)
-        else:
+        if self.subapp is not None:
             return self.subapp.start()
+        print(
+            f"No subcommand specified. Must specify one of: {list(self.subcommands)}"
+        )
+        print()
+        self.print_description()
+        self.print_subcommands()
+        self.exit(1)
 
 
 if __name__ == "__main__":

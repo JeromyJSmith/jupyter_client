@@ -159,10 +159,7 @@ class HBChannel(Thread):
 
     def is_beating(self) -> bool:
         """Is the heartbeat running and responsive (and not paused)."""
-        if self.is_alive() and not self._pause and self._beating:  # noqa
-            return True
-        else:
-            return False
+        return bool(self.is_alive() and not self._pause and self._beating)
 
     def stop(self) -> None:
         """Stop the channel's event loop and join its thread."""
@@ -225,10 +222,8 @@ class ZMQSocketChannel:
         assert self.socket is not None
         if timeout is not None:
             timeout *= 1000  # seconds to ms
-        ready = self.socket.poll(timeout)
-        if ready:
-            res = self._recv()
-            return res
+        if ready := self.socket.poll(timeout):
+            return self._recv()
         else:
             raise Empty
 
@@ -309,8 +304,7 @@ class AsyncZMQSocketChannel(ZMQSocketChannel):
             timeout *= 1000  # seconds to ms
         ready = await self.socket.poll(timeout)
         if ready:
-            res = await self._recv()
-            return res
+            return await self._recv()
         else:
             raise Empty
 

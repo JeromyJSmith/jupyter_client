@@ -1,4 +1,5 @@
 """A Jupyter console app to run files."""
+
 # Copyright (c) Jupyter Development Team.
 # Distributed under the terms of the Modified BSD License.
 import queue
@@ -15,20 +16,12 @@ from .consoleapp import JupyterConsoleApp, app_aliases, app_flags
 
 OUTPUT_TIMEOUT = 10
 
-# copy flags from mixin:
-flags = dict(base_flags)
 # start with mixin frontend flags:
 frontend_flags_dict = dict(app_flags)
-# update full dict with frontend flags:
-flags.update(frontend_flags_dict)
-
-# copy flags from mixin
-aliases = dict(base_aliases)
+flags = dict(base_flags) | frontend_flags_dict
 # start with mixin frontend flags
 frontend_aliases_dict = dict(app_aliases)
-# load updated frontend flags into full dict
-aliases.update(frontend_aliases_dict)
-
+aliases = dict(base_aliases) | frontend_aliases_dict
 # get flags&aliases into sets, and remove a couple that
 # shouldn't be scrubbed from backend flags:
 frontend_aliases = set(frontend_aliases_dict.keys())
@@ -109,7 +102,7 @@ class RunApp(JupyterApp, JupyterConsoleApp):
                     reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)
                     return_code = 0 if reply["content"]["status"] == "ok" else 1
                     if return_code:
-                        raise Exception("jupyter-run error running '%s'" % filename)
+                        raise Exception(f"jupyter-run error running '{filename}'")
         else:
             code = sys.stdin.read()
             reply = self.kernel_client.execute_interactive(code, timeout=OUTPUT_TIMEOUT)

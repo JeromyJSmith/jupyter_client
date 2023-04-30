@@ -399,13 +399,7 @@ class KernelClient(ConnectionFileMixin):
             # This KernelClient was created by a KernelManager,
             # we can ask the parent KernelManager:
             return await self.parent._async_is_alive()
-        if self._hb_channel is not None:
-            # We don't have access to the KernelManager,
-            # so we use the heartbeat.
-            return self._hb_channel.is_beating()
-        # no heartbeat and not local, we can't tell if it's running,
-        # so naively return True
-        return True
+        return self._hb_channel.is_beating() if self._hb_channel is not None else True
 
     async def _async_execute_interactive(
         self,

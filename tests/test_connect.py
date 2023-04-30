@@ -274,18 +274,17 @@ def test_reconcile_connection_info(file_exists, km_matches):
                 # changed-ports case (typical for remote provisioners).
                 km.load_connection_info(expected_info)
                 provisioner_info = mismatched_info
-        else:  # connection file does not exist
-            if km_matches:
-                # Let this be the case where the connection file does not exist, NOR does the KM
-                # have any values of its own and reconciliation sets those values. This is the
-                # non-LocalProvisioner case.
-                provisioner_info = expected_info
-            else:
-                # Let this be the case where the connection file does not exist, yet the KM
-                # has values that do not match those returned from the provisioner.  This case
-                # is probably not practical and is equivalent to the True, False case.
-                km.load_connection_info(expected_info)
-                provisioner_info = mismatched_info
+        elif km_matches:
+            # Let this be the case where the connection file does not exist, NOR does the KM
+            # have any values of its own and reconciliation sets those values. This is the
+            # non-LocalProvisioner case.
+            provisioner_info = expected_info
+        else:
+            # Let this be the case where the connection file does not exist, yet the KM
+            # has values that do not match those returned from the provisioner.  This case
+            # is probably not practical and is equivalent to the True, False case.
+            km.load_connection_info(expected_info)
+            provisioner_info = mismatched_info
 
         km._reconcile_connection_info(provisioner_info)
         km_info = km.get_connection_info()

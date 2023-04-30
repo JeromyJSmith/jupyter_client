@@ -140,7 +140,7 @@ class MultiKernelManager(LoggingConfigurable):
         # kwargs should be mutable, passing it as a dict argument.
         kernel_id = kwargs.pop("kernel_id", self.new_kernel_id(**kwargs))
         if kernel_id in self:
-            raise DuplicateKernelError("Kernel already exists: %s" % kernel_id)
+            raise DuplicateKernelError(f"Kernel already exists: {kernel_id}")
 
         if kernel_name is None:
             kernel_name = self.default_kernel_name
@@ -151,7 +151,9 @@ class MultiKernelManager(LoggingConfigurable):
         if self.kernel_spec_manager:
             constructor_kwargs["kernel_spec_manager"] = self.kernel_spec_manager
         km = self.kernel_manager_factory(
-            connection_file=os.path.join(self.connection_dir, "kernel-%s.json" % kernel_id),
+            connection_file=os.path.join(
+                self.connection_dir, f"kernel-{kernel_id}.json"
+            ),
             parent=self,
             log=self.log,
             kernel_name=kernel_name,
@@ -389,7 +391,7 @@ class MultiKernelManager(LoggingConfigurable):
     def _check_kernel_id(self, kernel_id: str) -> None:
         """check that a kernel id is valid"""
         if kernel_id not in self:
-            raise KeyError("Kernel with id not found: %s" % kernel_id)
+            raise KeyError(f"Kernel with id not found: {kernel_id}")
 
     def get_kernel(self, kernel_id: str) -> KernelManager:
         """Get the single KernelManager object for a kernel by its uuid.

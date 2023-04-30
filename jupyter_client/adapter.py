@@ -46,11 +46,7 @@ def extract_oname_v4(code: str, cursor_pos: int) -> str:
 
     # remove everything after last open bracket
     line = _end_bracket.sub("", line)
-    matches = _identifier.findall(line)
-    if matches:
-        return matches[-1]
-    else:
-        return ""
+    return matches[-1] if (matches := _identifier.findall(line)) else ""
 
 
 class Adapter:
@@ -137,11 +133,12 @@ class V5toV4(Adapter):
 
     def kernel_info_reply(self, msg: Dict[str, Any]) -> Dict[str, Any]:
         """Handle a kernel info reply."""
-        v4c = {}
         content = msg["content"]
-        for key in ("language_version", "protocol_version"):
-            if key in content:
-                v4c[key] = _version_str_to_list(content[key])
+        v4c = {
+            key: _version_str_to_list(content[key])
+            for key in ("language_version", "protocol_version")
+            if key in content
+        }
         if content.get("implementation", "") == "ipython" and "implementation_version" in content:
             v4c["ipython_version"] = _version_str_to_list(content["implementation_version"])
         language_info = content.get("language_info", {})
@@ -288,8 +285,7 @@ class V4toV5(Adapter):
         """Handle an execute reply."""
         content = msg["content"]
         user_expressions = content.setdefault("user_expressions", {})
-        user_variables = content.pop("user_variables", {})
-        if user_variables:
+        if user_variables := content.pop("user_variables", {}):
             user_expressions.update(user_variables)
 
         # Pager payloads became a mime bundle
@@ -419,9 +415,7 @@ def adapt(msg: Dict[str, Any], to_version: int = protocol_version_info[0]) -> Di
         # assume last version before adding the key to the header
         from_version = 4
     adapter = adapters.get((from_version, to_version), None)
-    if adapter is None:
-        return msg
-    return adapter(msg)
+    return msg if adapter is None else adapter(msg)
 
 
 # one adapter per major version from,to

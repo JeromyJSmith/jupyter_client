@@ -248,7 +248,7 @@ class KernelManager(ConnectionFileMixin):
     def client(self, **kwargs: t.Any) -> BlockingKernelClient:
         """Create a client configured to connect to our kernel"""
         kw: dict = {}
-        kw.update(self.get_connection_info(session=True))
+        kw |= self.get_connection_info(session=True)
         kw.update(
             {
                 "connection_file": self.connection_file,
@@ -584,7 +584,6 @@ class KernelManager(ConnectionFileMixin):
             except asyncio.TimeoutError:
                 # Wait timed out, just log warning but continue - not much more we can do.
                 self.log.warning("Wait for final termination of kernel timed out - continuing...")
-                pass
             else:
                 # Process is no longer alive, wait and clear
                 if self.has_kernel:
@@ -609,19 +608,16 @@ class KernelManager(ConnectionFileMixin):
             # Wait for a startup.
             await ready
 
-        if self.has_kernel:
-            assert self.kernel_spec is not None
-            interrupt_mode = self.kernel_spec.interrupt_mode
-            if interrupt_mode == "signal":
-                await self._async_signal_kernel(signal.SIGINT)
-
-            elif interrupt_mode == "message":
-                msg = self.session.msg("interrupt_request", content={})
-                self._connect_control_socket()
-                self.session.send(self._control_socket, msg)
-        else:
-            msg = "Cannot interrupt kernel. No kernel is running!"
-            raise RuntimeError(msg)
+        if not self.has_kernel:
+            raise RuntimeError("Cannot interrupt kernel. No kernel is running!")
+        assert self.kernel_spec is not None
+        interrupt_mode = self.kernel_spec.interrupt_mode
+        if interrupt_mode == "message":
+            msg = self.session.msg("interrupt_request", content={})
+            self._connect_control_socket()
+            self.session.send(self._control_socket, msg)
+        elif interrupt_mode == "signal":
+            await self._async_signal_kernel(signal.SIGINT)
 
     interrupt_kernel = run_sync(_async_interrupt_kernel)
 
@@ -633,12 +629,10 @@ class KernelManager(ConnectionFileMixin):
         Note that since only SIGTERM is supported on Windows, this function is
         only useful on Unix systems.
         """
-        if self.has_kernel:
-            assert self.provisioner is not None
-            await self.provisioner.send_signal(signum)
-        else:
-            msg = "Cannot signal kernel. No kernel is running!"
-            raise RuntimeError(msg)
+        if not self.has_kernel:
+            raise RuntimeError("Cannot signal kernel. No kernel is running!")
+        assert self.provisioner is not None
+        await self.provisioner.send_signal(signum)
 
     signal_kernel = run_sync(_async_signal_kernel)
 

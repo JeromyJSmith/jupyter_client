@@ -310,7 +310,7 @@ class TestSession:
     def test_unique_msg_ids(self, session):
         """test that messages receive unique ids"""
         ids = set()
-        for i in range(2**12):
+        for _ in range(2**12):
             h = session.msg_header("test")
             msg_id = h["msg_id"]
             self.assertTrue(msg_id not in ids)
@@ -344,18 +344,18 @@ class TestSession:
 
     def test_zero_digest_history(self):
         session = ss.Session(digest_history_size=0)
-        for i in range(11):
+        for _ in range(11):
             session._add_digest(uuid.uuid4().bytes)
         self.assertEqual(len(session.digest_history), 0)
 
     def test_cull_digest_history(self):
         session = ss.Session(digest_history_size=100)
-        for i in range(100):
+        for _ in range(100):
             session._add_digest(uuid.uuid4().bytes)
         self.assertTrue(len(session.digest_history) == 100)
         session._add_digest(uuid.uuid4().bytes)
         self.assertTrue(len(session.digest_history) == 91)
-        for i in range(9):
+        for _ in range(9):
             session._add_digest(uuid.uuid4().bytes)
         self.assertTrue(len(session.digest_history) == 100)
         session._add_digest(uuid.uuid4().bytes)
@@ -384,7 +384,7 @@ class TestSession:
 
     def test_bad_packer(self):
         try:
-            ss.Session(packer=__name__ + "._bad_packer")
+            ss.Session(packer=f"{__name__}._bad_packer")
         except ValueError as e:
             self.assertIn("could not serialize", str(e))
             self.assertIn("don't work", str(e))
@@ -393,7 +393,7 @@ class TestSession:
 
     def test_bad_unpacker(self):
         try:
-            ss.Session(unpacker=__name__ + "._bad_unpacker")
+            ss.Session(unpacker=f"{__name__}._bad_unpacker")
         except ValueError as e:
             self.assertIn("could not handle output", str(e))
             self.assertIn("don't work either", str(e))

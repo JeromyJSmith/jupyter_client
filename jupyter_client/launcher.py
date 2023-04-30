@@ -82,7 +82,7 @@ def launch_kernel(
         "cwd": cwd,
         "env": env,
     }
-    kwargs.update(main_args)
+    kwargs |= main_args
 
     # Spawn a kernel.
     if sys.platform == "win32":
